@@ -28,6 +28,7 @@
 		"typescript-eslint": "8.35.1"
 	},
 	"dependencies": {
+		"exiftool-vendored": "^34.3.0",
 		"obsidian": "latest"
 	}
 }
