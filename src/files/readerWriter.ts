@@ -1,87 +1,50 @@
 import { App, FileSystemAdapter, TFile } from "obsidian";
 import { FileFormat } from "./type";
-import { ExifTool } from "exiftool-vendored";
+import { JpgFile } from "./jpg";
+import { PngFile } from "./png";
 
-type ImageExtensions = "jpg" | "jpeg" | "png" | "webp" | "avif";
+type ImageExtensions = "jpg" | "jpeg" | "png";
 
 export class ReaderWriter {
 	public readonly extensions: ReadonlyArray<ImageExtensions> = [
+		"png",
 		"jpg",
 		"jpeg",
-		"png",
-		"webp",
-		"avif",
-	] as const;
-	private exiftool: ExifTool;
+	];
 
-	constructor(private app: App) {
-		this.exiftool = new ExifTool();
-	}
+	constructor(private app: App) {}
 
-	public async readFile(file: TFile): Promise<FileFormat> {
+	public async readFile(file: TFile): Promise<FileFormat | null> {
 		const extension = file.extension as ImageExtensions;
-		const filePath = this.app.vault.adapter.getResourcePath(file.path);
+		const data = Buffer.from(await this.app.vault.readBinary(file));
 
 		switch (extension) {
 			case "jpg":
 			case "jpeg":
+				return new JpgFile(data);
 			case "png":
-			case "webp":
-			case "avif": {
-				const metadata = await this.exiftool.read(filePath);
-				const arrayBuffer = await this.app.vault.adapter.readBinary(
-					file.path
-				);
-
-				return {
-					get imageDescription() {
-						return metadata["Description"] || "";
-					},
-					set imageDescription(body: string) {
-						metadata["Description"] = body;
-					},
-					toBuffer() {
-						return Buffer.from(arrayBuffer);
-					},
-				} as FileFormat;
-			}
+				return new PngFile(data);
 			default: {
 				const exhaustiveCheck: never = extension;
-				throw new Error(exhaustiveCheck);
+				console.warn(
+					`Unsupported file extension: ${exhaustiveCheck as unknown as string}`
+				);
+				return null;
 			}
 		}
 	}
 
 	public async writeFile(file: TFile, image: FileFormat): Promise<void> {
-		if (this.app.vault.adapter instanceof FileSystemAdapter) {
-			throw new Error("FileSystemAdapter is not supported");
-		}
-
-		await this.exiftool.write(file.path, {
-			Description: image.imageDescription,
-		});
-
-		const imageBuffer = image.toBuffer();
-		const buffer = imageBuffer.buffer.slice(
-			imageBuffer.byteOffset,
-			imageBuffer.byteOffset + imageBuffer.byteLength
-		);
-
-		const arrayBuffer =
-			buffer instanceof ArrayBuffer
-				? buffer
-				: new ArrayBuffer(buffer.byteLength as number);
-
-		if (!(buffer instanceof ArrayBuffer)) {
-			new Uint8Array(arrayBuffer).set(new Uint8Array(buffer));
-		}
-
-		await this.app.vault.adapter.writeBinary(file.path, arrayBuffer);
+		const buffer = image.toBuffer();
+		// SharedArrayBuffer の可能性があるため、ArrayBuffer にコピーして渡す
+		const arrayBuffer = Uint8Array.from(buffer).buffer;
+		await this.app.vault.modifyBinary(file, arrayBuffer);
 	}
 	public get isWriteable(): boolean {
-		return !(this.app.vault.adapter instanceof FileSystemAdapter);
-	}
-	public async dispose(): Promise<void> {
-		await this.exiftool?.end();
+		// FileSystemAdapterの場合はファイルシステムへの直接書き込みが必要なので対応していない
+		// それ以外のアダプター（モバイル版など）では対応可能
+		const isFileSystemAdapter =
+			this.app.vault.adapter instanceof FileSystemAdapter;
+		return !isFileSystemAdapter;
 	}
 }
