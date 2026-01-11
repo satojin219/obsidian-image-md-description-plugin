@@ -6,3 +6,8 @@ available in the app when your plugin is enabled.
 If your plugin does not need CSS, delete this file.
 
 */
+.image-metadata__tag-value {
+	width: 100%;
+	min-height: 60px;
+	margin-bottom: 10px;
+}
