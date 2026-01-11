@@ -14,11 +14,6 @@ export function createImageDescriptionView(
 		cls: "image-metadata-controls",
 	});
 
-	root.createDiv({
-		cls: "image-metadata__tag-name",
-		text: "Description",
-	});
-
 	const input = root.createEl("textarea", {
 		cls: "image-metadata__tag-value",
 		value: initialText,

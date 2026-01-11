@@ -68,6 +68,11 @@ export async function showImageDescriptionControls(
 			const target = event.target as HTMLElement | null;
 			const link = target?.closest("a");
 			if (!link) {
+				if (viewUi.preview.isShown()) {
+					viewUi.preview.hide();
+					viewUi.input.show();
+					viewUi.toggleButton.setText("Preview");
+				}
 				return;
 			}
 			if (link.classList.contains("internal-link")) {
@@ -97,6 +102,10 @@ export async function showImageDescriptionControls(
 			try {
 				await model.save();
 				new Notice("Description saved successfully");
+				await renderPreview();
+				viewUi.input.hide();
+				viewUi.preview.show();
+				viewUi.toggleButton.setText("Edit");
 			} catch (error) {
 				new Notice("Failed to save description");
 				console.error("Failed to save metadata:", error);
