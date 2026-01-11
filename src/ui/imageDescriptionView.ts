@@ -3,6 +3,7 @@ export type ImageDescriptionView = {
 	input: HTMLTextAreaElement;
 	preview: HTMLDivElement;
 	toggleButton: HTMLButtonElement;
+	toggleLabel: HTMLSpanElement;
 	remove: () => void;
 };
 
@@ -25,7 +26,19 @@ export function createImageDescriptionView(
 	});
 	preview.hide();
 
-	const toggleButton = root.createEl("button", {
+	const toggleWrap = root.createDiv({
+		cls: "image-metadata__toggle-wrap",
+	});
+
+	const toggleButton = toggleWrap.createEl("button", {
+		cls: "image-metadata__toggle",
+	});
+	toggleButton.setAttribute("type", "button");
+	toggleButton.setAttribute("aria-pressed", "false");
+	toggleButton.setAttribute("data-preview", "off");
+
+	const toggleLabel = toggleWrap.createSpan({
+		cls: "image-metadata__toggle-label",
 		text: "Preview",
 	});
 
@@ -34,6 +47,7 @@ export function createImageDescriptionView(
 		input,
 		preview,
 		toggleButton,
+		toggleLabel,
 		remove: () => root.remove(),
 	};
 }

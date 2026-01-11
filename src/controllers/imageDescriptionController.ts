@@ -53,6 +53,29 @@ export async function showImageDescriptionControls(
 		const renderChild = new MarkdownRenderChild(viewUi.preview);
 		plugin.addChild(renderChild);
 
+		const setPreviewState = (isPreview: boolean) => {
+			const label = isPreview ? "Edit" : "Preview";
+			if (isPreview) {
+				viewUi.input.hide();
+				viewUi.preview.show();
+			} else {
+				viewUi.preview.hide();
+				viewUi.input.show();
+			}
+			viewUi.toggleLabel.setText(label);
+			viewUi.toggleButton.setAttribute("aria-label", label);
+			viewUi.toggleButton.setAttribute(
+				"data-preview",
+				isPreview ? "on" : "off"
+			);
+			viewUi.toggleButton.setAttribute(
+				"aria-pressed",
+				isPreview ? "true" : "false"
+			);
+		};
+
+		setPreviewState(false);
+
 		const renderPreview = async () => {
 			viewUi.preview.empty();
 			await MarkdownRenderer.render(
@@ -69,9 +92,7 @@ export async function showImageDescriptionControls(
 			const link = target?.closest("a");
 			if (!link) {
 				if (viewUi.preview.isShown()) {
-					viewUi.preview.hide();
-					viewUi.input.show();
-					viewUi.toggleButton.setText("Preview");
+					setPreviewState(false);
 				}
 				return;
 			}
@@ -103,9 +124,7 @@ export async function showImageDescriptionControls(
 				await model.save();
 				new Notice("Description saved successfully");
 				await renderPreview();
-				viewUi.input.hide();
-				viewUi.preview.show();
-				viewUi.toggleButton.setText("Edit");
+				setPreviewState(true);
 			} catch (error) {
 				new Notice("Failed to save description");
 				console.error("Failed to save metadata:", error);
@@ -114,15 +133,11 @@ export async function showImageDescriptionControls(
 
 		plugin.registerDomEvent(viewUi.toggleButton, "click", async () => {
 			if (viewUi.preview.isShown()) {
-				viewUi.preview.hide();
-				viewUi.input.show();
-				viewUi.toggleButton.setText("Preview");
+				setPreviewState(false);
 				return;
 			}
 			await renderPreview();
-			viewUi.input.hide();
-			viewUi.preview.show();
-			viewUi.toggleButton.setText("Edit");
+			setPreviewState(true);
 		});
 	} catch (error) {
 		new Notice(
