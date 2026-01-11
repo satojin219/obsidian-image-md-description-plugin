@@ -11,3 +11,8 @@ If your plugin does not need CSS, delete this file.
 	min-height: 60px;
 	margin-bottom: 10px;
 }
+
+.image-metadata__suggest-path {
+	font-size: 0.85em;
+	opacity: 0.7;
+}
