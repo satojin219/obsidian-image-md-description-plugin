@@ -21,9 +21,12 @@ export function applyMarkdownLinkSuggestion(
 ): void {
 	const linkText = file.basename;
 	const value = inputEl.value;
+	const closeIndex = value.indexOf("]]", range.start);
+	const replaceEnd = closeIndex === -1 ? range.end : closeIndex + 2;
 	const before = value.slice(0, range.start);
+	const after = value.slice(replaceEnd);
 
-	inputEl.value = `${before}[[${linkText}]]`;
+	inputEl.value = `${before}[[${linkText}]]${after}`;
 	const newCursor = before.length + 2 + linkText.length;
 	inputEl.setSelectionRange(newCursor, newCursor);
 	inputEl.dispatchEvent(new Event("input"));
