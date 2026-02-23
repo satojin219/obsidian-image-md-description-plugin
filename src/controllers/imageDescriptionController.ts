@@ -8,10 +8,10 @@ import {
 	TFile,
 } from "obsidian";
 import { createImageDescriptionModel } from "models/imageDescriptionModel";
-import { MarkdownLinkSuggest } from "controllers/markdownLinkSuggest";
+import { createMarkdownLinkSuggestController } from "controllers/markdownLinkSuggestController";
 import { createImageDescriptionView } from "ui/imageDescriptionView";
 
-export async function showImageDescriptionControls(
+export async function mountImageDescriptionControls(
 	plugin: Plugin,
 	readerWriter: ReaderWriter,
 	file: TFile
@@ -43,12 +43,11 @@ export async function showImageDescriptionControls(
 			model.loadDescription()
 		);
 
-		const linkSuggest = new MarkdownLinkSuggest(
+		const linkSuggestController = createMarkdownLinkSuggestController(
 			plugin.app,
-			viewUi.input,
-			file
+			viewUi.input
 		);
-		plugin.register(() => linkSuggest.close());
+		plugin.register(() => linkSuggestController.destroy());
 
 		const renderChild = new MarkdownRenderChild(viewUi.preview);
 		plugin.addChild(renderChild);

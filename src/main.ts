@@ -1,6 +1,6 @@
 import { ReaderWriter } from "files/readerWriter";
 import { Plugin } from "obsidian";
-import { showImageDescriptionControls } from "controllers/imageDescriptionController";
+import { mountImageDescriptionControls } from "controllers/imageDescriptionController";
 
 export default class ImageMdDescriptionPlugin extends Plugin {
 	private readerWriter: ReaderWriter | undefined;
@@ -22,6 +22,6 @@ export default class ImageMdDescriptionPlugin extends Plugin {
 			return;
 		}
 
-		await showImageDescriptionControls(this, this.readerWriter!, file);
+		await mountImageDescriptionControls(this, this.readerWriter!, file);
 	}
 }
