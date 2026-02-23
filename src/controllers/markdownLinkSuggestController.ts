@@ -91,7 +91,7 @@ export function createMarkdownLinkSuggestController(
 			renderMarkdownLinkSuggestion(candidate, item);
 			item.addEventListener("mouseenter", () => {
 				selectedIndex = index;
-				refreshSelection();
+				refreshSelection(true);
 			});
 			item.addEventListener("mousedown", (event) => {
 				event.preventDefault();
@@ -105,15 +105,19 @@ export function createMarkdownLinkSuggestController(
 			isOpen = true;
 		}
 		updatePosition();
+		refreshSelection(true);
 	};
 
-	const refreshSelection = () => {
+	const refreshSelection = (shouldScroll: boolean = false) => {
 		const children = Array.from(suggestionListEl.children);
 		for (const [index, child] of children.entries()) {
 			if (!(child instanceof HTMLElement)) {
 				continue;
 			}
 			child.toggleClass("is-selected", index === selectedIndex);
+		}
+		if (shouldScroll) {
+			ensureSelectedSuggestionInView(container, suggestionListEl, selectedIndex);
 		}
 	};
 
@@ -172,7 +176,7 @@ export function createMarkdownLinkSuggestController(
 		if (event.key === "ArrowDown") {
 			event.preventDefault();
 			selectedIndex = (selectedIndex + 1) % suggestions.length;
-			refreshSelection();
+			refreshSelection(true);
 			return;
 		}
 
@@ -180,7 +184,7 @@ export function createMarkdownLinkSuggestController(
 			event.preventDefault();
 			selectedIndex =
 				(selectedIndex - 1 + suggestions.length) % suggestions.length;
-			refreshSelection();
+			refreshSelection(true);
 			return;
 		}
 
@@ -214,6 +218,41 @@ export function createMarkdownLinkSuggestController(
 	});
 
 	return { destroy, close };
+}
+
+function ensureSelectedSuggestionInView(
+	container: HTMLElement,
+	listEl: HTMLElement,
+	selectedIndex: number
+): void {
+	const selectedItem = listEl.children.item(selectedIndex);
+	if (!(selectedItem instanceof HTMLElement)) {
+		return;
+	}
+
+	keepElementInView(listEl, selectedItem);
+	keepElementInView(container, selectedItem);
+}
+
+function keepElementInView(
+	scrollContainer: HTMLElement,
+	item: HTMLElement
+): void {
+	if (scrollContainer.scrollHeight <= scrollContainer.clientHeight) {
+		return;
+	}
+
+	const containerRect = scrollContainer.getBoundingClientRect();
+	const itemRect = item.getBoundingClientRect();
+
+	if (itemRect.top < containerRect.top) {
+		scrollContainer.scrollTop -= containerRect.top - itemRect.top;
+		return;
+	}
+
+	if (itemRect.bottom > containerRect.bottom) {
+		scrollContainer.scrollTop += itemRect.bottom - containerRect.bottom;
+	}
 }
 
 function findMarkdownLinkSuggestions(app: App, queryText: string): TFile[] {
