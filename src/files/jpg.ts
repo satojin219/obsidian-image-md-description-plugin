@@ -11,18 +11,24 @@ export class JpgFile implements FileFormat {
 	}
 
 	public get imageDescription(): string {
-		if (!this.metadata["0th"]) {
+		const zerothIfd = this.metadata["0th"];
+		if (!zerothIfd) {
 			return "";
 		}
-		const desc = this.metadata["0th"][piexifjs.ImageIFD.ImageDescription] as string;
-		return Buffer.from(
-			desc,
-			"latin1"
-		).toString("utf-8");
+		const rawDescription = zerothIfd[
+			piexifjs.ImageIFD.ImageDescription
+		] as unknown;
+		if (typeof rawDescription !== "string" || rawDescription.length === 0) {
+			return "";
+		}
+		return Buffer.from(rawDescription, "latin1").toString("utf-8");
 	}
 
 	public set imageDescription(s: string) {
-		if (s !== "" && this.metadata["0th"]) {
+		if (s !== "") {
+			if (!this.metadata["0th"]) {
+				this.metadata["0th"] = {} as piexifjs.ExifDict["0th"];
+			}
 			this.metadata["0th"][piexifjs.ImageIFD.ImageDescription] =
 				Buffer.from(s).toString("latin1");
 		} else {
