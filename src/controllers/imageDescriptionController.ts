@@ -1,5 +1,6 @@
 import { ReaderWriter } from "files/readerWriter";
 import {
+	Component,
 	FileView,
 	MarkdownRenderChild,
 	MarkdownRenderer,
@@ -11,25 +12,35 @@ import { createImageDescriptionModel } from "models/imageDescriptionModel";
 import { createMarkdownLinkSuggestController } from "controllers/markdownLinkSuggestController";
 import { createImageDescriptionView } from "ui/imageDescriptionView";
 
+let activeControlsSession: Component | null = null;
+let mountSequence = 0;
+
 export async function mountImageDescriptionControls(
 	plugin: Plugin,
 	readerWriter: ReaderWriter,
 	file: TFile
 ): Promise<void> {
+	const sequence = ++mountSequence;
 	const view = plugin.app.workspace.getActiveViewOfType(FileView);
 
 	if (!view) {
+		clearActiveControlsSession(plugin);
 		return;
 	}
 
 	const viewContent = view.containerEl.querySelector(".view-content");
 
 	if (!(viewContent instanceof HTMLElement)) {
+		clearActiveControlsSession(plugin);
 		return;
 	}
 
 	try {
+		clearActiveControlsSession(plugin);
 		const model = await createImageDescriptionModel(readerWriter, file);
+		if (sequence !== mountSequence) {
+			return;
+		}
 
 		// 既存のコントロールを削除
 		viewContent.querySelector(".image-metadata-controls")?.remove();
@@ -43,14 +54,24 @@ export async function mountImageDescriptionControls(
 			model.loadDescription()
 		);
 
+		const session = new Component();
+		plugin.addChild(session);
+		activeControlsSession = session;
+
 		const linkSuggestController = createMarkdownLinkSuggestController(
 			plugin.app,
 			viewUi.input
 		);
-		plugin.register(() => linkSuggestController.destroy());
+		session.register(() => linkSuggestController.destroy());
+		session.register(() => viewUi.remove());
+		session.register(() => {
+			if (activeControlsSession === session) {
+				activeControlsSession = null;
+			}
+		});
 
 		const renderChild = new MarkdownRenderChild(viewUi.preview);
-		plugin.addChild(renderChild);
+		session.addChild(renderChild);
 
 		const setPreviewState = (isPreview: boolean) => {
 			const label = isPreview ? "Edit" : "Preview";
@@ -90,7 +111,7 @@ export async function mountImageDescriptionControls(
 			setPreviewState(false);
 		}
 
-		plugin.registerDomEvent(viewUi.preview, "click", (event) => {
+		session.registerDomEvent(viewUi.preview, "click", (event) => {
 			const target = event.target as HTMLElement | null;
 			const link = target?.closest("a");
 			if (!link) {
@@ -114,7 +135,7 @@ export async function mountImageDescriptionControls(
 			}
 		});
 
-		plugin.registerDomEvent(viewUi.input, "input", () => {
+		session.registerDomEvent(viewUi.input, "input", () => {
 			model.setDescription(viewUi.input.value);
 			if (!viewUi.preview.isShown()) {
 				return;
@@ -122,7 +143,7 @@ export async function mountImageDescriptionControls(
 			void renderPreview();
 		});
 
-		plugin.registerDomEvent(viewUi.input, "blur", async () => {
+		session.registerDomEvent(viewUi.input, "blur", async () => {
 			try {
 				await model.save();
 				new Notice("Description saved successfully");
@@ -134,7 +155,7 @@ export async function mountImageDescriptionControls(
 			}
 		});
 
-		plugin.registerDomEvent(viewUi.toggleButton, "click", async () => {
+		session.registerDomEvent(viewUi.toggleButton, "click", async () => {
 			if (viewUi.preview.isShown()) {
 				setPreviewState(false);
 				return;
@@ -148,4 +169,12 @@ export async function mountImageDescriptionControls(
 		);
 		console.error("Failed to read image:", error);
 	}
+}
+
+function clearActiveControlsSession(plugin: Plugin): void {
+	if (!activeControlsSession) {
+		return;
+	}
+	plugin.removeChild(activeControlsSession);
+	activeControlsSession = null;
 }
