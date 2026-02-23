@@ -27,7 +27,7 @@ export function applyMarkdownLinkSuggestion(
 	const after = value.slice(replaceEnd);
 
 	inputEl.value = `${before}[[${linkText}]]${after}`;
-	const newCursor = before.length + 2 + linkText.length;
+	const newCursor = before.length + 2 + linkText.length + 2;
 	inputEl.setSelectionRange(newCursor, newCursor);
 	inputEl.dispatchEvent(new Event("input"));
 }
