@@ -15,17 +15,6 @@ export function createImageDescriptionView(
 		cls: "image-metadata-controls",
 	});
 
-	const input = root.createEl("textarea", {
-		cls: "image-metadata__tag-value",
-		value: initialText,
-	});
-	input.value = initialText;
-
-	const preview = root.createDiv({
-		cls: "image-metadata__markdown-preview",
-	});
-	preview.hide();
-
 	const toggleWrap = root.createDiv({
 		cls: "image-metadata__toggle-wrap",
 	});
@@ -41,6 +30,21 @@ export function createImageDescriptionView(
 		cls: "image-metadata__toggle-label",
 		text: "Preview",
 	});
+
+	const editorContainer = root.createDiv({
+		cls: "image-metadata__editor-container",
+	});
+
+	const input = editorContainer.createEl("textarea", {
+		cls: "image-metadata__tag-value",
+		value: initialText,
+	});
+	input.value = initialText;
+
+	const preview = editorContainer.createDiv({
+		cls: "image-metadata__markdown-preview",
+	});
+	preview.hide();
 
 	return {
 		root,

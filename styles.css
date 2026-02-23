@@ -8,8 +8,26 @@ If your plugin does not need CSS, delete this file.
 */
 .image-metadata__tag-value {
 	width: 100%;
-	min-height: 60px;
-	margin-bottom: 10px;
+	min-height: 96px;
+	margin-bottom: 0;
+	box-sizing: border-box;
+}
+
+.image-metadata-controls {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.image-metadata__editor-container {
+	width: 100%;
+}
+
+.image-metadata__markdown-preview {
+	width: 100%;
+	min-height: 96px;
+	padding: 10px 12px;
+	box-sizing: border-box;
 }
 
 .image-metadata__suggest-path {
@@ -18,8 +36,9 @@ If your plugin does not need CSS, delete this file.
 }
 
 .image-metadata__toggle-wrap {
-	display: inline-flex;
+	display: flex;
 	align-items: center;
+	justify-content: flex-start;
 	gap: 8px;
 }
 
@@ -75,6 +94,8 @@ If your plugin does not need CSS, delete this file.
 	font-size: 12px;
 	font-weight: 600;
 	color: var(--text-muted);
+	min-width: 56px;
+	text-align: left;
 }
 
 .image-metadata__toggle[data-preview="on"] + .image-metadata__toggle-label {
