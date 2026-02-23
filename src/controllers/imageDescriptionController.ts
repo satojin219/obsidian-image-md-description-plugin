@@ -73,8 +73,6 @@ export async function mountImageDescriptionControls(
 			);
 		};
 
-		setPreviewState(false);
-
 		const renderPreview = async () => {
 			viewUi.preview.empty();
 			await MarkdownRenderer.render(
@@ -85,6 +83,12 @@ export async function mountImageDescriptionControls(
 				renderChild
 			);
 		};
+		if (viewUi.input.value.trim().length > 0) {
+			await renderPreview();
+			setPreviewState(true);
+		} else {
+			setPreviewState(false);
+		}
 
 		plugin.registerDomEvent(viewUi.preview, "click", (event) => {
 			const target = event.target as HTMLElement | null;
