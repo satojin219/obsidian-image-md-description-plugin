@@ -1,18 +1,10 @@
 import { ReaderWriter } from "files/readerWriter";
-import {
-	Component,
-	FileView,
-	MarkdownRenderChild,
-	MarkdownRenderer,
-	Notice,
-	Plugin,
-	TFile,
-} from "obsidian";
-import { createImageDescriptionModel } from "models/imageDescriptionModel";
-import { createMarkdownLinkSuggestController } from "controllers/markdownLinkSuggestController";
-import { createImageDescriptionView } from "ui/imageDescriptionView";
+import { Component, FileView, Notice, Plugin, TFile } from "obsidian";
+import { createImageDescriptionSession } from "controllers/imageDescriptionSession";
 
+// 現在表示中のコントロールセッション（次回 file-open で差し替える）。
 let activeControlsSession: Component | null = null;
+// 非同期処理の競合を防ぐための連番。最新の mount 呼び出しだけを有効化する。
 let mountSequence = 0;
 
 export async function mountImageDescriptionControls(
@@ -37,131 +29,28 @@ export async function mountImageDescriptionControls(
 
 	try {
 		clearActiveControlsSession(plugin);
-		const model = await createImageDescriptionModel(readerWriter, file);
-		if (sequence !== mountSequence) {
-			return;
-		}
-
-		// 既存のコントロールを削除
-		viewContent.querySelector(".image-metadata-controls")?.remove();
-
-		if (!model) {
-			return;
-		}
-
-		const viewUi = createImageDescriptionView(
+		const session = await createImageDescriptionSession({
+			plugin,
+			readerWriter,
+			file,
 			viewContent,
-			model.loadDescription()
-		);
-
-		const session = new Component();
+			isStale: () => sequence !== mountSequence,
+		});
+		if (!session) {
+			return;
+		}
+		if (sequence !== mountSequence) {
+			session.unload();
+			return;
+		}
 		plugin.addChild(session);
 		activeControlsSession = session;
-
-		const linkSuggestController = createMarkdownLinkSuggestController(
-			plugin.app,
-			viewUi.input
-		);
-		session.register(() => linkSuggestController.destroy());
-		session.register(() => viewUi.remove());
 		session.register(() => {
+			// unload 時に現在セッションへの参照を解放する。
+			// 比較ガードを入れて、古い session の後処理で新しい参照を消さないようにする。
 			if (activeControlsSession === session) {
 				activeControlsSession = null;
 			}
-		});
-
-		const renderChild = new MarkdownRenderChild(viewUi.preview);
-		session.addChild(renderChild);
-
-		const setPreviewState = (isPreview: boolean) => {
-			const label = isPreview ? "Edit" : "Preview";
-			if (isPreview) {
-				viewUi.input.hide();
-				viewUi.preview.show();
-			} else {
-				viewUi.preview.hide();
-				viewUi.input.show();
-			}
-			viewUi.toggleLabel.setText(label);
-			viewUi.toggleButton.setAttribute("aria-label", label);
-			viewUi.toggleButton.setAttribute(
-				"data-preview",
-				isPreview ? "on" : "off"
-			);
-			viewUi.toggleButton.setAttribute(
-				"aria-pressed",
-				isPreview ? "true" : "false"
-			);
-		};
-
-		const renderPreview = async () => {
-			viewUi.preview.empty();
-			await MarkdownRenderer.render(
-				plugin.app,
-				viewUi.input.value,
-				viewUi.preview,
-				file.path,
-				renderChild
-			);
-		};
-		if (viewUi.input.value.trim().length > 0) {
-			await renderPreview();
-			setPreviewState(true);
-		} else {
-			setPreviewState(false);
-		}
-
-		session.registerDomEvent(viewUi.preview, "click", (event) => {
-			const target = event.target as HTMLElement | null;
-			const link = target?.closest("a");
-			if (!link) {
-				if (viewUi.preview.isShown()) {
-					setPreviewState(false);
-				}
-				return;
-			}
-			if (link.classList.contains("internal-link")) {
-				const href =
-					link.getAttribute("data-href") ?? link.getAttribute("href");
-				if (!href) {
-					return;
-				}
-				event.preventDefault();
-				void plugin.app.workspace.openLinkText(
-					href,
-					file.path,
-					event.metaKey || event.ctrlKey
-				);
-			}
-		});
-
-		session.registerDomEvent(viewUi.input, "input", () => {
-			model.setDescription(viewUi.input.value);
-			if (!viewUi.preview.isShown()) {
-				return;
-			}
-			void renderPreview();
-		});
-
-		session.registerDomEvent(viewUi.input, "blur", async () => {
-			try {
-				await model.save();
-				new Notice("Description saved successfully");
-				await renderPreview();
-				setPreviewState(true);
-			} catch (error) {
-				new Notice("Failed to save description");
-				console.error("Failed to save metadata:", error);
-			}
-		});
-
-		session.registerDomEvent(viewUi.toggleButton, "click", async () => {
-			if (viewUi.preview.isShown()) {
-				setPreviewState(false);
-				return;
-			}
-			await renderPreview();
-			setPreviewState(true);
 		});
 	} catch (error) {
 		new Notice(
@@ -171,10 +60,12 @@ export async function mountImageDescriptionControls(
 	}
 }
 
+// file-open ごとに前回セッションを確実に unload して、イベント/child の積み上がりを防ぐ。
 function clearActiveControlsSession(plugin: Plugin): void {
 	if (!activeControlsSession) {
 		return;
 	}
+
 	plugin.removeChild(activeControlsSession);
 	activeControlsSession = null;
 }

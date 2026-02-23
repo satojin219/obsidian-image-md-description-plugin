@@ -1,9 +1,21 @@
+import { Component } from "obsidian";
+
+type ImageDescriptionViewHandlers = {
+	onPreviewClick: (event: MouseEvent) => void;
+	onInput: (value: string) => void;
+	onBlur: () => void | Promise<void>;
+	onToggleClick: () => void | Promise<void>;
+};
+
 export type ImageDescriptionView = {
 	root: HTMLDivElement;
-	input: HTMLTextAreaElement;
-	preview: HTMLDivElement;
-	toggleButton: HTMLButtonElement;
-	toggleLabel: HTMLSpanElement;
+	getInputEl: () => HTMLTextAreaElement;
+	getPreviewEl: () => HTMLDivElement;
+	getValue: () => string;
+	setPreviewMode: (isPreview: boolean) => void;
+	isPreviewMode: () => boolean;
+	// 要素にイベントを登録する
+	bind: (session: Component, handlers: ImageDescriptionViewHandlers) => void;
 	remove: () => void;
 };
 
@@ -46,12 +58,42 @@ export function createImageDescriptionView(
 	});
 	preview.hide();
 
+	const setPreviewMode = (isPreview: boolean) => {
+		const label = isPreview ? "Edit" : "Preview";
+		if (isPreview) {
+			input.hide();
+			preview.show();
+		} else {
+			preview.hide();
+			input.show();
+		}
+		toggleLabel.setText(label);
+		toggleButton.setAttribute("aria-label", label);
+		toggleButton.setAttribute("data-preview", isPreview ? "on" : "off");
+		toggleButton.setAttribute("aria-pressed", isPreview ? "true" : "false");
+	};
+
+	const bind = (session: Component, handlers: ImageDescriptionViewHandlers) => {
+		session.registerDomEvent(preview, "click", handlers.onPreviewClick);
+		session.registerDomEvent(input, "input", () => {
+			handlers.onInput(input.value);
+		});
+		session.registerDomEvent(input, "blur", () => {
+			void handlers.onBlur();
+		});
+		session.registerDomEvent(toggleButton, "click", () => {
+			void handlers.onToggleClick();
+		});
+	};
+
 	return {
 		root,
-		input,
-		preview,
-		toggleButton,
-		toggleLabel,
+		getInputEl: () => input,
+		getPreviewEl: () => preview,
+		getValue: () => input.value,
+		setPreviewMode,
+		isPreviewMode: () => preview.isShown(),
+		bind,
 		remove: () => root.remove(),
 	};
 }
