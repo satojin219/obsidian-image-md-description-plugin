@@ -13,6 +13,13 @@ export async function mountImageDescriptionControls(
 	file: TFile
 ): Promise<void> {
 	const sequence = ++mountSequence;
+
+	// 画像以外のファイルではバイナリ読み込みもUIマウントも行わない。
+	if (!readerWriter.supports(file)) {
+		clearActiveControlsSession(plugin);
+		return;
+	}
+
 	const view = plugin.app.workspace.getActiveViewOfType(FileView);
 
 	if (!view) {

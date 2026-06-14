@@ -1,5 +1,5 @@
-import { App, FileSystemAdapter, TFile } from "obsidian";
-import { FileFormat } from "./type";
+import { type App, FileSystemAdapter, type TFile } from "obsidian";
+import type { FileFormat } from "./type";
 import { JpgFile } from "./jpg";
 import { PngFile } from "./png";
 
@@ -14,7 +14,16 @@ export class ReaderWriter {
 
 	constructor(private app: App) {}
 
+	public supports(file: TFile): boolean {
+		return (this.extensions as ReadonlyArray<string>).includes(
+			file.extension
+		);
+	}
+
 	public async readFile(file: TFile): Promise<FileFormat | null> {
+		if (!this.supports(file)) {
+			return null;
+		}
 		const extension = file.extension as ImageExtensions;
 		const data = Buffer.from(await this.app.vault.readBinary(file));
 
