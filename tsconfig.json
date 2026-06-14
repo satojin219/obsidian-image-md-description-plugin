@@ -1,17 +1,22 @@
 {
 	"compilerOptions": {
-		"baseUrl": "src",
+		"paths": {
+			"*": ["./src/*"]
+		},
 		"inlineSourceMap": true,
 		"inlineSources": true,
 		"module": "ESNext",
 		"target": "ES6",
 		"allowJs": true,
 		"strict": true,
-		"moduleResolution": "node",
+		"moduleResolution": "bundler",
 		"importHelpers": true,
 		"noUncheckedIndexedAccess": true,
 		"isolatedModules": true,
 		"allowSyntheticDefaultImports": true,
+		"types": [
+			"node"
+		],
 		"lib": [
 			"DOM",
 			"ES5",
