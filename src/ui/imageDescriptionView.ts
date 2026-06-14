@@ -1,4 +1,4 @@
-import { Component } from "obsidian";
+import type { Component } from "obsidian";
 
 type ImageDescriptionViewHandlers = {
 	onPreviewClick: (event: MouseEvent) => void;

@@ -1,5 +1,5 @@
-import { ReaderWriter } from "files/readerWriter";
-import { TFile } from "obsidian";
+import type { ReaderWriter } from "files/readerWriter";
+import type { TFile } from "obsidian";
 import type { FileFormat } from "files/type";
 
 export type ImageDescriptionModel = {
