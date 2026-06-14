@@ -63,7 +63,6 @@ export class ImageDescriptionControlsController {
 			new Notice(
 				`Failed to read image metadata: ${error instanceof Error ? error.message : String(error)}`
 			);
-			console.error("Failed to read image:", error);
 		}
 	}
 

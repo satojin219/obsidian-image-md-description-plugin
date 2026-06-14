@@ -34,10 +34,10 @@ export class ReaderWriter {
 			case "png":
 				return new PngFile(data);
 			default: {
-				const exhaustiveCheck: never = extension;
-				console.warn(
-					`Unsupported file extension: ${exhaustiveCheck as unknown as string}`
-				);
+				// supports() で事前に弾いているので到達不可。
+				// 将来 extensions に追加して case の書き忘れがあれば型エラーになる。
+				const _exhaustiveCheck: never = extension;
+				void _exhaustiveCheck;
 				return null;
 			}
 		}

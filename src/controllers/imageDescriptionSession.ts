@@ -109,9 +109,8 @@ export async function createImageDescriptionSession(
 				new Notice("Description saved successfully");
 				await renderPreview();
 				viewUi.setPreviewMode(true);
-			} catch (error) {
+			} catch {
 				new Notice("Failed to save description");
-				console.error("Failed to save metadata:", error);
 			}
 		},
 		onToggleClick: async () => {
