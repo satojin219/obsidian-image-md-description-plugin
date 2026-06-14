@@ -1,4 +1,4 @@
-import { type App, FileSystemAdapter, type TFile } from "obsidian";
+import type { App, TFile } from "obsidian";
 import type { FileFormat } from "./type";
 import { JpgFile } from "./jpg";
 import { PngFile } from "./png";
@@ -48,12 +48,5 @@ export class ReaderWriter {
 		// SharedArrayBuffer の可能性があるため、ArrayBuffer にコピーして渡す
 		const arrayBuffer = Uint8Array.from(buffer).buffer;
 		await this.app.vault.modifyBinary(file, arrayBuffer);
-	}
-	public get isWriteable(): boolean {
-		// FileSystemAdapterの場合はファイルシステムへの直接書き込みが必要なので対応していない
-		// それ以外のアダプター（モバイル版など）では対応可能
-		const isFileSystemAdapter =
-			this.app.vault.adapter instanceof FileSystemAdapter;
-		return !isFileSystemAdapter;
 	}
 }
