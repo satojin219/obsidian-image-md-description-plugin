@@ -1,11 +1,11 @@
-import { ReaderWriter } from "files/readerWriter";
+import type { ReaderWriter } from "files/readerWriter";
 import {
 	Component,
 	MarkdownRenderChild,
 	MarkdownRenderer,
 	Notice,
-	Plugin,
-	TFile,
+	type Plugin,
+	type TFile,
 } from "obsidian";
 import { createImageDescriptionModel } from "models/imageDescriptionModel";
 import { createMarkdownLinkSuggestController } from "controllers/markdownLinkSuggestController";

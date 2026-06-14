@@ -1,5 +1,5 @@
-import { ReaderWriter } from "files/readerWriter";
-import { Component, FileView, Notice, Plugin, TFile } from "obsidian";
+import type { ReaderWriter } from "files/readerWriter";
+import { type Component, FileView, Notice, type Plugin, type TFile } from "obsidian";
 import { createImageDescriptionSession } from "controllers/imageDescriptionSession";
 
 // 現在表示中のコントロールセッション（次回 file-open で差し替える）。

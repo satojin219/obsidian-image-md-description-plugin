@@ -18,10 +18,10 @@ export default class ImageMdDescriptionPlugin extends Plugin {
 	async onFileOpen() {
 		const file = this.app.workspace.getActiveFile();
 
-		if (!file) {
+		if (!file || !this.readerWriter) {
 			return;
 		}
 
-		await mountImageDescriptionControls(this, this.readerWriter!, file);
+		await mountImageDescriptionControls(this, this.readerWriter, file);
 	}
 }
