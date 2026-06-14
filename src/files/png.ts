@@ -1,6 +1,6 @@
 import extract from "png-chunks-extract";
 import encode from "png-chunks-encode";
-import { FileFormat } from "./type";
+import type { FileFormat } from "./type";
 
 type PngChunk = {
 	name: string;
@@ -141,7 +141,7 @@ export class PngFile implements FileFormat {
 	private description: string;
 
 	constructor(data: Buffer) {
-		this.chunks = extract(data) as PngChunk[];
+		this.chunks = extract(data);
 		this.description = findDescription(this.chunks);
 	}
 
