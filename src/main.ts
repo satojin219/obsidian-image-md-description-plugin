@@ -1,27 +1,34 @@
 import { ReaderWriter } from "files/readerWriter";
 import { Plugin } from "obsidian";
-import { mountImageDescriptionControls } from "controllers/imageDescriptionController";
+import { ImageDescriptionControlsController } from "controllers/imageDescriptionController";
 
 export default class ImageMdDescriptionPlugin extends Plugin {
-	private readerWriter: ReaderWriter | undefined;
+	private imageDescriptionControls: ImageDescriptionControlsController | undefined;
 
 	async onload() {
-		this.readerWriter = new ReaderWriter(this.app);
+		const readerWriter = new ReaderWriter(this.app);
+		this.imageDescriptionControls = new ImageDescriptionControlsController(
+			this,
+			readerWriter
+		);
 
 		this.registerEvent(
 			this.app.workspace.on("file-open", this.onFileOpen.bind(this))
 		);
 	}
 
-	onunload() {}
+	onunload() {
+		this.imageDescriptionControls?.unload();
+		this.imageDescriptionControls = undefined;
+	}
 
 	async onFileOpen() {
 		const file = this.app.workspace.getActiveFile();
 
-		if (!file || !this.readerWriter) {
+		if (!file || !this.imageDescriptionControls) {
 			return;
 		}
 
-		await mountImageDescriptionControls(this, this.readerWriter, file);
+		await this.imageDescriptionControls.mount(file);
 	}
 }
