@@ -49,7 +49,13 @@ Other file types are ignored — the plugin will not even read the file bytes fo
 3. Click outside the editor (blur). The description is written into the image file and the view switches to preview mode
 4. Click the rendered preview area to switch back to edit mode
 
-<!-- TODO: screenshots (edit mode / preview mode / link suggest) を追加 -->
+### Edit mode (with internal link suggestion)
+
+![Edit mode with link suggestion](docs/edit-mode.png)
+
+### Preview mode (rendered Markdown)
+
+![Preview mode](docs/preview-mode.png)
 
 ## Limitations
 
