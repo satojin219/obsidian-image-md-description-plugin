@@ -1,0 +1,57 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "[0-9]+.[0-9]+.[0-9]+"
+
+permissions:
+    contents: write
+    id-token: write
+    attestations: write
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout
+              uses: actions/checkout@v4
+
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: "20"
+                  cache: "npm"
+
+            - name: Install dependencies
+              run: npm ci
+
+            - name: Build
+              run: npm run build
+
+            - name: Verify manifest version matches tag
+              run: |
+                  TAG="${GITHUB_REF_NAME}"
+                  MANIFEST_VERSION=$(node -p "require('./manifest.json').version")
+                  if [ "$TAG" != "$MANIFEST_VERSION" ]; then
+                      echo "::error::Tag ($TAG) does not match manifest.json version ($MANIFEST_VERSION)"
+                      exit 1
+                  fi
+
+            - name: Attest build provenance
+              uses: actions/attest-build-provenance@v2
+              with:
+                  subject-path: |
+                      main.js
+                      manifest.json
+                      styles.css
+
+            - name: Create GitHub Release
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: |
+                  TAG="${GITHUB_REF_NAME}"
+                  gh release create "$TAG" \
+                      main.js manifest.json styles.css \
+                      --title "$TAG" \
+                      --generate-notes
