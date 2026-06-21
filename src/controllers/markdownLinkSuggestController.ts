@@ -29,7 +29,8 @@ export function createMarkdownLinkSuggestController(
 		}
 	});
 
-	inputDetachObserver.observe(document.body, {
+	// popout window でも追従できるよう、 input が属する document を見る
+	inputDetachObserver.observe(inputEl.ownerDocument.body, {
 		childList: true,
 		subtree: true,
 	});
