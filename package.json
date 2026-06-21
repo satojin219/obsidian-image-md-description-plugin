@@ -1,6 +1,6 @@
 {
 	"name": "image-md-description",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"private": true,
 	"description": "Edit image (PNG/JPEG) descriptions as Markdown and persist them as image metadata.",
 	"main": "main.js",
